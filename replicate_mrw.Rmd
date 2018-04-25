@@ -19,7 +19,7 @@ library(dplyr)      # data manipulation
 library(tibble)     # nicer dataframes
 library(stargazer)  # tables
 library(ggplot2)    # graphs
-library(car)
+library(car)        # linear hypotheses
 ```
 
 
@@ -142,4 +142,62 @@ stargazer(solow_noil_r, solow_int_r, solow_oecd_r, type = "html",
 linearHypothesis(solow_oecd, "ln_inv_gdp = - ln_ndg")
 linearHypothesis(solow_noil, "ln_inv_gdp = - ln_ndg")
 linearHypothesis(solow_int, "ln_inv_gdp = - ln_ndg")
+```
+
+## Table 2
+
+### Unrestricted Model
+```{r}
+augsolow_oecd <- lm(ln_gdp_85 ~ ln_inv_gdp + ln_ndg + ln_school, data = oecd)
+augsolow_int  <- lm(ln_gdp_85 ~ ln_inv_gdp + ln_ndg + ln_school, data = intermediate)
+augsolow_noil <- lm(ln_gdp_85 ~ ln_inv_gdp + ln_ndg + ln_school, data = non_oil)
+```
+
+### Regression Table
+```{r, results = 'asis'}
+stargazer(augsolow_noil, augsolow_int, augsolow_oecd, type = "html",
+          column.labels = c("Non-Oil", 
+                            "Intermediate", 
+                            "OECD"),
+          covariate.labels = c("log(I / GDP)", 
+                               "log(n+delta+g)", 
+                               "Constant"), 
+          dep.var.labels = "Log(GDP) 1985",
+          omit.stat = c("f", 
+                        "rsq", 
+                        "ser"),
+          title = "Table 2 - Unrestricted Models",
+          style = "qje")
+```
+
+### Restricted Regression
+
+```{r}
+augsolow_oecd_r <- lm(ln_gdp_85 ~ I(ln_inv_gdp - ln_ndg) + I(ln_school - ln_ndg), data = oecd)
+augsolow_int_r  <- lm(ln_gdp_85 ~ I(ln_inv_gdp - ln_ndg) + I(ln_school - ln_ndg), data = intermediate)
+augsolow_noil_r <- lm(ln_gdp_85 ~ I(ln_inv_gdp - ln_ndg) + I(ln_school - ln_ndg), data = non_oil)
+```
+
+### Regression Table
+```{r, results = 'asis'}
+stargazer(augsolow_noil_r, augsolow_int_r, augsolow_oecd_r, type = "html",
+          column.labels = c("Non-Oil", 
+                            "Intermediate", 
+                            "OECD"),
+          covariate.labels = c("log(I / GDP)- log(n+delta+g)", 
+                               "log(school)- log(n+delta+g)",
+                               "Constant"), 
+          dep.var.labels = "Log(GDP) 1985",
+          omit.stat = c("f", 
+                        "rsq", 
+                        "ser"),
+          title = "Table 2 - Restricted Models",
+          style = "qje")
+```
+
+### Test of Restriction
+```{r}
+linearHypothesis(augsolow_oecd, "ln_inv_gdp + ln_ndg + ln_school = 0")
+linearHypothesis(augsolow_noil, "ln_inv_gdp + ln_ndg + ln_school = 0")
+linearHypothesis(augsolow_int, "ln_inv_gdp + ln_ndg + ln_school = 0")
 ```
