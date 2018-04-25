@@ -14,7 +14,7 @@ Essentially we want to replicate the entirety of the empirical component of Mank
 
 ## Libraries
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 library(haven)      # reading stata data
 library(dplyr)      # data manipulation
 library(tibble)     # nicer dataframes
