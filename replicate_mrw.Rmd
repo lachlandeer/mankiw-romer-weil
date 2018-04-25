@@ -1,0 +1,145 @@
+---
+title: "Replicate MRW in full"
+author: '@lachlandeer & @julianlanger'
+date: "April 25, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+There probably won't be too much expository text
+
+## Libraries
+
+```{r}
+library(haven)      # reading stata data
+library(dplyr)      # data manipulation
+library(tibble)     # nicer dataframes
+library(stargazer)  # tables
+library(ggplot2)    # graphs
+library(car)
+```
+
+
+## Load data
+```{r}
+mrw_data <- read_dta("raw_data/mrw.dta")
+```
+
+Structure?
+
+```{r}
+str(mrw_data)
+skimr::skim(mrw_data)
+```
+
+## Meaningful variable names
+
+```{r}
+
+mrw_data <- mrw_data %>% 
+              rename(non_oil = n, 
+                     oecd = o,
+                     intermediate = i,
+                     gdp_60 = rgdpw60,
+                     gdp_85 = rgdpw85,
+                     gdp_growth_60_85 = gdpgrowth,
+                     pop_growth_60_85 = popgrowth,
+                     inv_gdp = i_y,
+                     school = school)
+
+```
+
+## Variable Creation
+
+```{r}
+delta_gamma <- 0.05
+
+mrw_data <- mrw_data %>% 
+                  mutate(ln_gdp_85 = log(gdp_85),
+                         ln_gdp_60 = log(gdp_60),
+                         ln_inv_gdp = log(inv_gdp/100),
+                         non_oil = factor(non_oil),
+                         intermediate = factor(intermediate),
+                         oecd = factor(oecd),
+                         ln_ndg = log(pop_growth_60_85/100 + delta_gamma),
+                         ln_school = log(school/100)) %>% 
+                  select(country, ln_gdp_85, ln_gdp_60, ln_inv_gdp, 
+                         non_oil, intermediate, oecd,
+                         ln_ndg, ln_school, gdp_growth_60_85)
+
+```
+
+## Samples
+
+```{r}
+oecd         <- mrw_data %>% 
+                    filter(oecd == 1)
+intermediate <- mrw_data %>% 
+                    filter(intermediate == 1)
+non_oil      <- mrw_data %>% 
+                    filter(non_oil == 1)
+```
+
+## Table 1
+
+### Unrestricted Regression
+
+```{r}
+solow_oecd <- lm(ln_gdp_85 ~ ln_inv_gdp + ln_ndg, data = oecd)
+solow_int  <- lm(ln_gdp_85 ~ ln_inv_gdp + ln_ndg, data = intermediate)
+solow_noil <- lm(ln_gdp_85 ~ ln_inv_gdp + ln_ndg, data = non_oil)
+```
+
+#### Regression Table
+
+```{r, results = 'asis'}
+stargazer(solow_noil, solow_int, solow_oecd, type = "html",
+          column.labels = c("Non-Oil", 
+                            "Intermediate", 
+                            "OECD"),
+          covariate.labels = c("log(I / GDP)", 
+                               "log(n+delta+g)", 
+                               "Constant"), 
+          dep.var.labels = "Log(GDP) 1985",
+          omit.stat = c("f", 
+                        "rsq", 
+                        "ser"),
+          title = "Table 1 - Unrestricted Models",
+          style = "qje")
+```
+
+### Restricted Regression
+
+```{r}
+solow_oecd_r <- lm(ln_gdp_85 ~ I(ln_inv_gdp - ln_ndg), data = oecd)
+solow_int_r  <- lm(ln_gdp_85 ~ I(ln_inv_gdp - ln_ndg), data = intermediate)
+solow_noil_r <- lm(ln_gdp_85 ~ I(ln_inv_gdp - ln_ndg), data = non_oil)
+```
+
+#### Regression Table
+
+```{r, results = 'asis'}
+stargazer(solow_noil_r, solow_int_r, solow_oecd_r, type = "html",
+          column.labels = c("Non-Oil", 
+                            "Intermediate", 
+                            "OECD"),
+          covariate.labels = c("log(I / GDP)- log(n+delta+g)", 
+                               "Constant"), 
+          dep.var.labels = "Log(GDP) 1985",
+          omit.stat = c("f", 
+                        "rsq", 
+                        "ser"),
+          title = "Table 1 - Restricted Models",
+          style = "qje")
+```
+
+### Test of Restriction
+
+```{r}
+linearHypothesis(solow_oecd, "ln_inv_gdp = - ln_ndg")
+linearHypothesis(solow_noil, "ln_inv_gdp = - ln_ndg")
+linearHypothesis(solow_int, "ln_inv_gdp = - ln_ndg")
+```
