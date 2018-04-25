@@ -9,7 +9,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-There probably won't be too much expository text
+There probably won't be too much expository text.
+Essentially we want to replicate the entirety of the empirical component of Mankiw, Romer and Weil (1992)
 
 ## Libraries
 
@@ -112,6 +113,7 @@ stargazer(solow_noil, solow_int, solow_oecd, type = "html",
           style = "qje")
 ```
 
+
 ### Restricted Regression
 
 ```{r}
@@ -143,6 +145,20 @@ stargazer(solow_noil_r, solow_int_r, solow_oecd_r, type = "html",
 linearHypothesis(solow_oecd, "ln_inv_gdp = - ln_ndg")
 linearHypothesis(solow_noil, "ln_inv_gdp = - ln_ndg")
 linearHypothesis(solow_int, "ln_inv_gdp = - ln_ndg")
+```
+
+### Implied alpha 
+
+
+```{r}
+alpha_solow_noil <- round(coef(solow_noil_r)[2] / (1 + coef(solow_noil_r)[2]), digits = 2)
+print(paste("Implied Alpha (Non oil):", alpha_solow_noil))
+
+alpha_solow_int <- round(coef(solow_int_r)[2] / (1 + coef(solow_int_r)[2]), digits = 2)
+print(paste("Implied Alpha (Intermediate):", alpha_solow_int))
+
+alpha_solow_oecd <- round(coef(solow_oecd_r)[2] / (1 + coef(solow_oecd_r)[2]), digits = 2)
+print(paste("Implied Alpha (OECD):", alpha_solow_oecd))
 ```
 
 ## Table 2
