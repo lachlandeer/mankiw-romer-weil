@@ -330,7 +330,7 @@ linearHypothesis(augcc_int, "ln_inv_gdp + ln_ndg + ln_school = 0")
 
 ## Figure 1
 
-Notice that the actual axis labels in the are misleading. 
+Notice that the actual axis labels in the paper are a little misleading. 
 These actually replicate the figure.
 
 ### Top Panel
@@ -345,7 +345,7 @@ ggplot(intermediate, aes(x = ln_gdp_60, y = ln_gdp_growth)) +
     xlab("Log output per working age adult: 1960")
 ```
 
-## Middle Panel
+### Middle Panel
 
 Takes a little more work, we need the residuals 
 
@@ -368,7 +368,7 @@ ggplot(panel_b, aes(x = x2, y = y2)) +
     xlab("Log output per working age adult: 1960")
 ```
 
-## Bottom Panel
+### Bottom Panel
 Again need the residuals 
 
 ```{r}
